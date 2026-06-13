@@ -3,20 +3,23 @@ import CounterStat from './CounterStat'
 
 export default function Hero() {
 
-  // Initialize participants state from localStorage (fallback to 73, current Devpost live number)
+  // Initialize participants state from localStorage (fallback to 131, current Devpost live number)
   const [participants, setParticipants] = useState(() => {
     const cached = localStorage.getItem('devpost_participants_count')
     if (cached) {
       const parsed = parseInt(cached, 10)
       if (!isNaN(parsed)) return parsed
     }
-    return 73
+    return 131
   })
 
   useEffect(() => {
     const fetchParticipants = async () => {
       const url = 'https://global-tech-innovation-2026.devpost.com/'
       const proxies = [
+        `https://corsproxy.io/?${encodeURIComponent(url)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
         `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
       ]
@@ -24,7 +27,7 @@ export default function Hero() {
       for (const proxyUrl of proxies) {
         try {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 7000)
+          const timeoutId = setTimeout(() => controller.abort(), 12000) // 12 seconds timeout per proxy
 
           const res = await fetch(proxyUrl, { signal: controller.signal })
           clearTimeout(timeoutId)
@@ -32,21 +35,36 @@ export default function Hero() {
           if (!res.ok) continue
 
           let html = ''
-          if (proxyUrl.includes('allorigins')) {
+          if (proxyUrl.includes('allorigins') && !proxyUrl.includes('/raw')) {
             const json = await res.json()
             html = json.contents || ''
           } else {
             html = await res.text()
           }
 
-          const match = html.match(/Participants\s*\((\d+)\)/i)
-          if (match && match[1]) {
-            const count = parseInt(match[1], 10)
-            if (count > 0) {
-              setParticipants(count)
-              localStorage.setItem('devpost_participants_count', count.toString())
-              break // Successfully fetched and updated count
+          if (!html || html.length === 0) continue
+
+          // Match participants count robustly matching Devpost HTML variations
+          let count = null
+          const match1 = html.match(/<strong[^>]*>(\d+)<\/strong>\s*participants/i)
+          if (match1 && match1[1]) {
+            count = parseInt(match1[1], 10)
+          } else {
+            const match2 = html.match(/(\d+)\s*participants/i)
+            if (match2 && match2[1]) {
+              count = parseInt(match2[1], 10)
+            } else {
+              const match3 = html.match(/Participants\s*\((\d+)\)/i)
+              if (match3 && match3[1]) {
+                count = parseInt(match3[1], 10)
+              }
             }
+          }
+
+          if (count && count > 0) {
+            setParticipants(count)
+            localStorage.setItem('devpost_participants_count', count.toString())
+            break // Successfully fetched and updated count
           }
         } catch (err) {
           console.warn(`Failed to fetch from proxy: ${proxyUrl}`, err)
