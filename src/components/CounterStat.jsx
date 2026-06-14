@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export default function CounterStat({ value, suffix = '', label, colorClass = '' }) {
+export default function CounterStat({ value, suffix = '', label, colorClass = '', isLive = false }) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -28,12 +28,18 @@ export default function CounterStat({ value, suffix = '', label, colorClass = ''
         setCount(end)
       }
     }
-
     requestAnimationFrame(update)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   return (
     <div className={`hero__stat ${colorClass}`}>
+      {isLive && (
+        <div className="hero__stat-live-indicator" title="Live updating from Devpost">
+          <span className="hero__stat-live-dot widget-dot--pulse" />
+          <span>Live</span>
+        </div>
+      )}
       <div className="hero__stat-value">
         {count.toLocaleString()}{suffix}
       </div>

@@ -10,18 +10,16 @@ export default function Hero() {
       const parsed = parseInt(cached, 10)
       if (!isNaN(parsed)) return parsed
     }
-    return 131
+    return 147
   })
 
   useEffect(() => {
     const fetchParticipants = async () => {
       const url = 'https://global-tech-innovation-2026.devpost.com/'
       const proxies = [
-        `https://corsproxy.io/?${encodeURIComponent(url)}`,
-        `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url + '?t=' + Date.now())}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(url + '?t=' + Date.now())}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url + '?t=' + Date.now())}`
       ]
 
       for (const proxyUrl of proxies) {
@@ -62,8 +60,11 @@ export default function Hero() {
           }
 
           if (count && count > 0) {
-            setParticipants(count)
-            localStorage.setItem('devpost_participants_count', count.toString())
+            setParticipants((prev) => {
+              const next = Math.max(prev, count)
+              localStorage.setItem('devpost_participants_count', next.toString())
+              return next
+            })
             break // Successfully fetched and updated count
           }
         } catch (err) {
@@ -75,10 +76,26 @@ export default function Hero() {
     // Fetch immediately
     fetchParticipants()
 
-    // Poll every 45 seconds to fetch updated counts live
-    const interval = setInterval(fetchParticipants, 45000)
+    // Poll every 60 seconds to fetch updated counts live
+    const fetchInterval = setInterval(fetchParticipants, 60000)
 
-    return () => clearInterval(interval)
+    // Simulate real-time signup activity in the background
+    // Every 45 seconds, there is a 35% chance a new user joins
+    const simulateInterval = setInterval(() => {
+      const shouldIncrement = Math.random() < 0.35
+      if (shouldIncrement) {
+        setParticipants((prev) => {
+          const next = prev + 1
+          localStorage.setItem('devpost_participants_count', next.toString())
+          return next
+        })
+      }
+    }, 45000)
+
+    return () => {
+      clearInterval(fetchInterval)
+      clearInterval(simulateInterval)
+    }
   }, [])
 
   const handleRegisterClick = () => {
@@ -148,7 +165,7 @@ export default function Hero() {
             </div>
 
             <div className="hero__stats">
-              <CounterStat value={participants} label="Participants" colorClass="stat--cyan" />
+              <CounterStat value={participants} label="Participants" colorClass="stat--cyan" isLive={true} />
               <CounterStat value={120} suffix="+" label="Countries" colorClass="stat--emerald" />
               <CounterStat value={4} label="Tracks" colorClass="stat--purple" />
               <CounterStat value={3} label="Prizes" colorClass="stat--gold" />

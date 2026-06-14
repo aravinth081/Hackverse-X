@@ -163,6 +163,36 @@
 .hero__stat-value { font-size: var(--text-3xl); font-weight: var(--weight-extrabold); color: var(--accent); transition: color var(--transition-slow); }
 .hero__stat-label { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-widest); margin-top: 4px; font-weight: var(--weight-bold); }
 
+/* Live Indicator Overlay */
+.hero__stat-live-indicator {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: #10B981;
+  text-transform: uppercase;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wider);
+}
+[data-theme="light"] .hero__stat-live-indicator {
+  color: #059669;
+}
+.hero__stat-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  display: inline-block;
+}
+[data-theme="light"] .hero__stat-live-dot {
+  background-color: #059669;
+  box-shadow: 0 0 6px rgba(5, 150, 105, 0.4);
+}
+
 /* Stats Color Varieties (SaaS-themed) */
 .stat--cyan .hero__stat-value {
   color: var(--cyan-neon);
